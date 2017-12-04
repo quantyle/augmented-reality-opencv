@@ -10,7 +10,7 @@
 using namespace cv;
 using namespace cv::xfeatures2d;
 
-#define MIN_HESSIAN 400
+#define MIN_HESSIAN 300
 
 int main()
 {
@@ -22,7 +22,7 @@ int main()
 
   //load template image
   img_object = imread("template.PNG", IMREAD_GRAYSCALE );
-  resize(img_object, img_object, Size(500,500));
+  resize(img_object, img_object, Size(400,400));
   //img_scene = imread( "test.jpg", IMREAD_GRAYSCALE );
   if( !img_object.data)
   { std::cout<< " --(!) Error reading image " << std::endl; return -1; }
@@ -140,7 +140,7 @@ int main()
       //Apply transformation to video image and copy with mask
       warpPerspective( img_video, img_video, H_latest, Size(img_scene.cols,img_scene.rows));
 
-      if( good_detection ){ 
+      if(   good_detection ){
         img_video.copyTo(img_scene, scene_mask);
       }
 
