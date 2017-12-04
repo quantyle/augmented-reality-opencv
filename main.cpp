@@ -37,6 +37,8 @@ int main()
 
   //main loop
   while(1){
+    bool good_detection = false;
+
     cap >> img_scene;
     if(!img_scene.data)
     { std::cout<< " --(!) Error reading camera " << std::endl; return -1; }
@@ -79,28 +81,27 @@ int main()
         obj.push_back( keypoints_object[ good_matches[i].queryIdx ].pt );
         scene.push_back( keypoints_scene[ good_matches[i].trainIdx ].pt );
       }
-      //this returns a 3x3 transformation matrix
+      //this returns a 3x3 transformation matrix. If none could be found continue
+      //to the next iteration.
       Mat H = findHomography( obj, scene, RANSAC );
+      if (!H.data){
+        continue;
+      }
+
       //-- Get the corners from the image_1 ( the object to be "detected" )
       std::vector<Point2f> obj_corners(4);
-      obj_corners[0] = cvPoint(0,0);
+      obj_corners[0] = cvPoint(0, 0);
       obj_corners[1] = cvPoint( img_object.cols, 0 );
       obj_corners[2] = cvPoint( img_object.cols, img_object.rows );
       obj_corners[3] = cvPoint( 0, img_object.rows );
       std::vector<Point2f> scene_corners(4);
       perspectiveTransform( obj_corners, scene_corners, H);
 
+      // Check the determinent of the transormation matrix to make sure it's not crazy
       float hDet = abs(determinant(H));
-      std::cout << "hDet=" << hDet << std::endl;
-      if (hDet < 100 && hDet > 0.01){ // Good detection, reasonable transform
-        std::cout << "Got match" << std::endl;
+      if (hDet < 100 && hDet > 0.05){ // Good detection, reasonable transform
         H_latest = H;
-        scene_mask = Mat::zeros(img_scene.rows, img_scene.cols, CV_8UC1);
-        cv::Point nonfloat_corners[4];
-        for(int i=0; i<4; i++){
-         nonfloat_corners[i] = scene_corners[i];
-        }
-        fillConvexPoly(scene_mask, nonfloat_corners, 4, cv::Scalar(1));
+        good_detection = true;
       }
 
       //-- Draw lines between the corners (the mapped object in the scene - image_2 )
@@ -116,16 +117,34 @@ int main()
       line( img_matches, scene_corners[2] + Point2f( img_object.cols, 0), scene_corners[3] + Point2f( img_object.cols, 0), Scalar( 0, 255, 0), 4 );
       line( img_matches, scene_corners[3] + Point2f( img_object.cols, 0), scene_corners[0] + Point2f( img_object.cols, 0), Scalar( 0, 255, 0), 4 );
       //-- Show detected matches
-      imshow( "SURF", img_matches );
+      //imshow( "SURF", img_matches );
 
       Mat img_video;
       vid >> img_video;
-      //apply the homography transform matrix
-      warpPerspective( img_video, img_video, H_latest, Size(img_video.cols,img_video.rows));
 
-      std::cout << "Fixing to draw mask" << std::endl;
-      imshow( "Test", scene_mask);
-      std::cout << "Drew it" << std::endl;
+
+      // Create the mask for the video in the scene veiw
+      std::vector<Point2f> vid_corners(4);
+      vid_corners[0] = cvPoint( 0, 0 );
+      vid_corners[1] = cvPoint( img_video.cols, 0 );
+      vid_corners[2] = cvPoint( img_video.cols, img_video.rows );
+      vid_corners[3] = cvPoint( 0, img_video.rows );
+
+      cv::Point nonfloat_corners[4];
+      for(int i=0; i<4; i++){
+       nonfloat_corners[i] = vid_corners[i];
+      }
+      fillConvexPoly(scene_mask, nonfloat_corners, 4, cv::Scalar(255));
+      warpPerspective( scene_mask, scene_mask, H_latest, Size(img_scene.cols,img_scene.rows));
+
+      //Apply transformation to video image and copy with mask
+      warpPerspective( img_video, img_video, H_latest, Size(img_scene.cols,img_scene.rows));
+
+      if( good_detection ){ 
+        img_video.copyTo(img_scene, scene_mask);
+      }
+
+      imshow( "Test", img_scene);
 
       waitKey(1);
     }
