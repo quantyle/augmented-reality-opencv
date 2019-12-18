@@ -1,6 +1,7 @@
 
 #include <stdio.h>
 #include <iostream>
+#include <string>
 #include <cmath>
 #include "opencv2/core.hpp"
 #include "opencv2/imgproc.hpp"
@@ -8,18 +9,30 @@
 #include "opencv2/highgui.hpp"
 #include "opencv2/calib3d.hpp"
 #include "opencv2/xfeatures2d.hpp"
+
 using namespace cv;
 using namespace cv::xfeatures2d;
 
 #define MIN_HESSIAN 300
 
-int main()
+int main(int argc, char** argv)
 {
+  // get the name of the video file
+  std::string fName;
+  
+  if(argc){
+    std::cout << argc;
+    fName = argv[1];
+  } else {
+    std::cout << "Enter a video file name: ";
+    getline (std::cin, fName);
+  }
+
   // camera
   VideoCapture cap(0);
   
   // video to render over QR code
-  VideoCapture vid("videoplayback.mp4"); 
+  VideoCapture vid(fName); 
 
   Mat img_object, img_scene, descriptors_object, descriptors_scene, img_matches;;
   std::vector<KeyPoint> keypoints_object, keypoints_scene;
@@ -48,14 +61,14 @@ int main()
 
     cap >> img_scene;
     if(!img_scene.data)
-    { std::cout<< " --(!) Error reading camera " << std::endl; return -1; }
+    { std::cout<< "Error reading camera " << std::endl; return -1; }
 
     // We can now initialize scene_mask with proper dimentions
     scene_mask = Mat::zeros(img_scene.rows, img_scene.cols, CV_8UC1);
 
     detector->detectAndCompute( img_scene, Mat(), keypoints_scene, descriptors_scene );
-    // match descriptor vectors using FLANN matcher
 
+    // match descriptor vectors using FLANN matcher
     std::vector< DMatch > matches;
     matcher.match( descriptors_object, descriptors_scene, matches );
     double max_dist = 0; double min_dist = 100;
@@ -109,7 +122,7 @@ int main()
 
       // check the determinent of the transormation matrix to make sure it's not crazy
       float hDet = abs(determinant(H));
-      if (hDet < 100 && hDet > 0.05){ // Good detection, reasonable transform
+      if (hDet < 200 && hDet > 0.05){ // Good detection, reasonable transform
         H_latest = H;
         good_detection = true;
       }
@@ -154,7 +167,10 @@ int main()
       
       // render scene
       imshow( "Test", img_scene);
-      waitKey(1);
+
+      // if ESC is pressed, break loop     
+      if ( (char)27 == (char) waitKey(1) ) break;
+ 
     }
   }
   return 0;

@@ -11,6 +11,8 @@ stdio.h
 -
 iostream
 -
+string
+-
 cmath
 -
 opencv2/core.hpp
