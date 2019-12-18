@@ -1,0 +1,3 @@
+/home/nemo/Projects/Augmented-Reality-OpenCV/CMakeFiles/rebuild_cache.dir
+/home/nemo/Projects/Augmented-Reality-OpenCV/CMakeFiles/AR-CV.dir
+/home/nemo/Projects/Augmented-Reality-OpenCV/CMakeFiles/edit_cache.dir

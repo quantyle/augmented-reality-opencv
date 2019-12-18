@@ -1,3 +1,4 @@
+
 #include <stdio.h>
 #include <iostream>
 #include <cmath>
@@ -15,13 +16,13 @@ using namespace cv::xfeatures2d;
 int main()
 {
   VideoCapture cap(0);
-  VideoCapture vid("kendrick.mp4"); // load some fire
+  VideoCapture vid("videoplayback.mp4"); // load some fire
   Mat img_object, img_scene, descriptors_object, descriptors_scene, img_matches;;
   std::vector<KeyPoint> keypoints_object, keypoints_scene;
   FlannBasedMatcher matcher;
 
   //load template image
-  img_object = imread("template.PNG", IMREAD_GRAYSCALE );
+  img_object = imread("QR.png", IMREAD_GRAYSCALE );
   resize(img_object, img_object, Size(400,400));
   //img_scene = imread( "test.jpg", IMREAD_GRAYSCALE );
   if( !img_object.data)
@@ -90,10 +91,10 @@ int main()
 
       //-- Get the corners from the image_1 ( the object to be "detected" )
       std::vector<Point2f> obj_corners(4);
-      obj_corners[0] = cvPoint(0, 0);
-      obj_corners[1] = cvPoint( img_object.cols, 0 );
-      obj_corners[2] = cvPoint( img_object.cols, img_object.rows );
-      obj_corners[3] = cvPoint( 0, img_object.rows );
+      obj_corners[0] = Point(0, 0);
+      obj_corners[1] = Point( img_object.cols, 0 );
+      obj_corners[2] = Point( img_object.cols, img_object.rows );
+      obj_corners[3] = Point( 0, img_object.rows );
       std::vector<Point2f> scene_corners(4);
       perspectiveTransform( obj_corners, scene_corners, H);
 
@@ -125,10 +126,10 @@ int main()
 
       // Create the mask for the video in the scene veiw
       std::vector<Point2f> vid_corners(4);
-      vid_corners[0] = cvPoint( 0, 0 );
-      vid_corners[1] = cvPoint( img_video.cols, 0 );
-      vid_corners[2] = cvPoint( img_video.cols, img_video.rows );
-      vid_corners[3] = cvPoint( 0, img_video.rows );
+      vid_corners[0] = Point( 0, 0 );
+      vid_corners[1] = Point( img_video.cols, 0 );
+      vid_corners[2] = Point( img_video.cols, img_video.rows );
+      vid_corners[3] = Point( 0, img_video.rows );
 
       cv::Point nonfloat_corners[4];
       for(int i=0; i<4; i++){
